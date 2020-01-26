@@ -3,8 +3,31 @@ kvenn
 
 CLI Tool for doing set-operations on lines of input. Each line is treated as an item in a set. Each input is treated as a set.
 
-
 ## Usage
+
+
+    usage: kvenn [-h] [-n] [-s] [-f]
+                 [-o {+,-,x,d,union,difference,intersection,unique}]
+                 sets [sets ...]
+
+    positional arguments:
+      sets                  Each file is a set and each line in the file is a
+                            member of the set
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -n, --non-empty       non-empty values only
+      -s, --strip           strip surrounding whitespace
+      -f, --filter          strip and filter to non-empty
+      -o {+,-,x,d,union,difference,intersection,unique}, --operation {+,-,x,d,union,difference,intersection,unique}
+                            Operation to perform on the sets [-] Subtract sets
+                            1...N from set 0 [+] Get the union of sets 0...N [x]
+                            Get the intersection of sets 0...N [d] Symmetric
+                            difference (disjunctive union). Elements from all sets
+                            which are not in any others.
+
+
+## Examples
 
 
 Unique values in a file
