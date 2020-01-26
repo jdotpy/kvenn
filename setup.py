@@ -6,7 +6,7 @@ with open("README.md", "r") as f:
 setup(
     name = 'kvenn',
     scripts=['bin/kvenn'],
-    version = '1.0.1',
+    version = '1.0.2',
     description = 'CLI tool for waiting on ports to open',
     long_description=long_description,
     long_description_content_type="text/markdown",
