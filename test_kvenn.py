@@ -109,15 +109,21 @@ class TestCSVHandler:
 
     def test_extract_key_single(self):
         obj = {'color': 'Red', 'id': '1'}
-        assert file_handlers.CSVHandler.extract_key(obj, ['color']) == 'Red'
+        key, failed = file_handlers.CSVHandler.extract_key(obj, ['color'])
+        assert key == 'Red'
+        assert not failed
 
     def test_extract_key_multi(self):
         obj = {'a': '1', 'b': '2'}
-        assert file_handlers.CSVHandler.extract_key(obj, ['a', 'b']) == ('1', '2')
+        key, failed = file_handlers.CSVHandler.extract_key(obj, ['a', 'b'])
+        assert key == ('1', '2')
+        assert not failed
 
     def test_extract_key_missing(self):
         obj = {'a': '1'}
-        assert file_handlers.CSVHandler.extract_key(obj, ['missing']) is None
+        key, failed = file_handlers.CSVHandler.extract_key(obj, ['missing'])
+        assert key is None
+        assert failed
 
 
 # --- NDJsonHandler ---
@@ -482,6 +488,60 @@ class TestThreeSources:
                 ['a.txt', 'b.txt', 'c.txt'], '+', DEFAULT_HANDLER_OPTIONS
             )
         assert result == {'Red', 'Green', 'Blue', 'Yellow'}
+
+
+# --- compute_stats and format_stats ---
+
+class TestComputeStats:
+    def test_two_text_sources(self):
+        # s1: {A, B, C}, s2: {B, C, D, E}
+        f1 = io.StringIO("A\nB\nC\n")
+        f2 = io.StringIO("B\nC\nD\nE\n")
+        with patch('builtins.open', side_effect=[f1, f2]):
+            stats = core.compute_stats(
+                ['s1.txt', 's2.txt'], DEFAULT_HANDLER_OPTIONS
+            )
+
+        assert stats['source_count'] == 2
+        assert stats['union']['count'] == 5          # A B C D E
+        assert stats['intersection']['count'] == 2   # B C
+        assert stats['difference']['count'] == 1     # A
+        assert stats['symmetric_difference']['count'] == 3  # A D E
+
+        src1, src2 = stats['sources']
+        assert src1['name'] == 's1.txt'
+        assert src1['total'] == 3
+        assert src1['unique'] == 1   # A
+        assert src1['unique_example'] == 'A'
+        assert src2['total'] == 4
+        assert src2['unique'] == 2   # D E
+
+        # examples should come from their respective result sets
+        assert stats['union']['example'] in {'A', 'B', 'C', 'D', 'E'}
+        assert stats['intersection']['example'] in {'B', 'C'}
+        assert stats['difference']['example'] == 'A'
+        assert stats['symmetric_difference']['example'] in {'A', 'D', 'E'}
+
+    def test_three_sources_unique_counts(self):
+        # s1: {A, B}, s2: {B, C}, s3: {C, D}
+        f1 = io.StringIO("A\nB\n")
+        f2 = io.StringIO("B\nC\n")
+        f3 = io.StringIO("C\nD\n")
+        with patch('builtins.open', side_effect=[f1, f2, f3]):
+            stats = core.compute_stats(
+                ['s1.txt', 's2.txt', 's3.txt'], DEFAULT_HANDLER_OPTIONS
+            )
+
+        assert stats['source_count'] == 3
+        assert stats['union']['count'] == 4
+        assert stats['intersection']['count'] == 0
+
+        src1, src2, src3 = stats['sources']
+        assert src1['unique'] == 1   # A
+        assert src2['unique'] == 0   # B is in s1, C is in s3
+        assert src3['unique'] == 1   # D
+        assert src2['unique_example'] is None
+
 
 
 # --- OPERATIONS lookup ---

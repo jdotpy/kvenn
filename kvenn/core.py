@@ -139,6 +139,93 @@ def compute(sources, operation, handler_options):
 
     return result, values_mm, first_handler, first_fields, fields_union
 
+def _first_example(s):
+    return next(iter(s)) if s else None
+
+
+def _sym_diff(sets):
+    result = set()
+    for index, primary in enumerate(sets):
+        others = sets[0:index] + sets[index + 1:]
+        difference = primary.copy()
+        if others:
+            difference.difference_update(*others)
+        result.update(difference)
+    return result
+
+
+def compute_stats(sources, handler_options):
+    sets = []
+    names = []
+    for source in sources:
+        parts = extract_source_name_parts(source)
+        names.append(parts['file_path'])
+        handler = load_source(source, handler_options)
+        handler_result, _ = handler.read()
+        if type(handler_result) == set:
+            sets.append(handler_result)
+        else:
+            sets.append(set(handler_result.keys()))
+
+    union = set().union(*sets)
+    intersection = set.intersection(*sets)
+    difference = sets[0].copy()
+    if len(sets) > 1:
+        difference.difference_update(*sets[1:])
+    sym_diff = _sym_diff(sets)
+
+    source_stats = []
+    for i, s in enumerate(sets):
+        others = sets[:i] + sets[i + 1:]
+        unique = s.copy()
+        if others:
+            unique.difference_update(*others)
+        source_stats.append({
+            'name': names[i],
+            'total': len(s),
+            'unique': len(unique),
+            'unique_example': _first_example(unique),
+        })
+
+    return {
+        'source_count': len(sets),
+        'sources': source_stats,
+        'union': {'count': len(union), 'example': _first_example(union)},
+        'intersection': {'count': len(intersection), 'example': _first_example(intersection)},
+        'difference': {'count': len(difference), 'example': _first_example(difference)},
+        'symmetric_difference': {'count': len(sym_diff), 'example': _first_example(sym_diff)},
+    }
+
+
+def _format_example(example):
+    if example is None:
+        return ''
+    return '    (e.g. {})'.format(example)
+
+
+def format_stats(stats):
+    union_count = stats['union']['count']
+    lines = []
+    lines.append('All ({} sources, {} total unique items):'.format(
+        stats['source_count'], union_count))
+
+    for label, key in [('Union', 'union'), ('Intersection', 'intersection'),
+                        ('Difference (A - B)', 'difference'),
+                        ('Symmetric difference', 'symmetric_difference')]:
+        entry = stats[key]
+        lines.append('  {:<25s} {:>5d}{}'.format(
+            label + ':', entry['count'], _format_example(entry['example'])))
+
+    for i, src in enumerate(stats['sources'], 1):
+        lines.append('')
+        lines.append('Source {} - {}:'.format(i, src['name']))
+        lines.append('  {:<10s} {:>5d}'.format('Total:', src['total']))
+        lines.append('  {:<10s} {:>5d}{}'.format(
+            'Unique:', src['unique'], _format_example(src['unique_example'])))
+
+    return '\n'.join(lines)
+
+
 def cli():
     parser = argparse.ArgumentParser()
     parser.add_argument('sets', nargs="+", help='Each file is a set and each line in the file is a member of the set')
@@ -148,7 +235,7 @@ def cli():
     parser.add_argument('--force-string-keys', action='store_true', default=False, help='JSON set keys should be forced to a string type')
     parser.add_argument('-f', '--format', default=None, help='Output handler (csv,json/ndjson,text) default=whatever your first input was')
     parser.add_argument('-o', '--operation',
-        choices=['+', '-', 'x', 'd', 'union', 'difference', 'intersection', 'unique'],
+        choices=['+', '-', 'x', 'd', 'union', 'difference', 'intersection', 'unique', 'stats'],
         default='+',
         help="""
             Operation to perform on the sets
@@ -166,6 +253,12 @@ def cli():
         'should_drop_empty':  args.filter or args.non_empty,
         'force_string_keys': args.force_string_keys,
     }
+
+    if args.operation == 'stats':
+        stats = compute_stats(args.sets, handler_options)
+        sys.stdout.write(format_stats(stats) + '\n')
+        return
+
     # Attempt to allow a user to explicitly set output format, setting it to text
     #  if there are other types doens't really work so we won't allow it. we'll
     #  also have to do some hacky behavior to support these with text input so...

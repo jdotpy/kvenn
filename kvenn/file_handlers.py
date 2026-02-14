@@ -103,13 +103,16 @@ class CSVHandler():
     @classmethod
     def extract_key(cls, obj, keys, default=None):
         key_values = []
+        key_failed = False
         for key in keys:
             key_value = obj.get(key, default)
+            if key_value is None:
+                key_failed = True
             key_values.append(key_value)
         if len(key_values) == 1:
-            return key_values[0]
+            return key_values[0], key_failed
         else:
-            return tuple(key_values)
+            return tuple(key_values), key_failed
 
     def read(self):
         values = {}

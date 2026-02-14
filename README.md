@@ -22,12 +22,13 @@ CLI Tool for doing set-operations on lines of input. Each line is treated as an 
       --force-string-keys   JSON set keys should be forced to a string type
       -f, --format FORMAT   Output handler (csv,json/ndjson,text)
                             default=whatever your first input was
-      -o {+,-,x,d,union,difference,intersection,unique}, --operation {+,-,x,d,union,difference,intersection,unique}
+      -o {+,-,x,d,union,difference,intersection,unique,stats}, --operation {+,-,x,d,union,difference,intersection,unique,stats}
                             Operation to perform on the sets [-] Subtract sets
                             1...N from set 0 [+] Get the union of sets 0...N [x]
                             Get the intersection of sets 0...N [d] Symmetric
                             difference (disjunctive union). Elements from all sets
-                            which are not in any others.
+                            which are not in any others. [stats] Print a summary
+                            of all operations and per-source breakdowns.
 
 
 ## Input Formats
@@ -76,7 +77,7 @@ Unique values in a file
 
     kvenn <input>
 
-Unique values in two or more files (Also `--union`)
+Unique values in two or more files (Also `--operation union`)
 
     kvenn <input1> <input2> <inputN>
 
@@ -94,6 +95,25 @@ Values found in only one file
 Subtract values in B (and C, D.. etc) from A. (Unique values from A)
 
     kvenn <inputA> <inputB> [<inputC>] --operation difference
+
+
+Get a summary of all set operations at once
+
+    kvenn data_1.txt data_2.txt --operation stats
+
+    All (2 sources, 17 total unique items):
+      Union:                       17    (e.g. Purple)
+      Intersection:                 3    (e.g. Purple)
+      Difference (A - B):           7    (e.g. Teal)
+      Symmetric difference:        14    (e.g. Teal)
+
+    Source 1 - data_1.txt:
+      Total:        10
+      Unique:        7    (e.g. Teal)
+
+    Source 2 - data_2.txt:
+      Total:        10
+      Unique:        7    (e.g. Pink)
 
 
 ## Development
