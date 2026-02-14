@@ -6,7 +6,7 @@ CLI Tool for doing set-operations on lines of input. Each line is treated as an 
 ## Usage
 
 
-    usage: kvenn [-h] [-n] [-s] [-f]
+    usage: kvenn [-h] [-n] [-s] [-x] [--force-string-keys] [-f FORMAT]
                  [-o {+,-,x,d,union,difference,intersection,unique}]
                  sets [sets ...]
 
@@ -18,13 +18,55 @@ CLI Tool for doing set-operations on lines of input. Each line is treated as an 
       -h, --help            show this help message and exit
       -n, --non-empty       non-empty values only
       -s, --strip           strip surrounding whitespace
-      -f, --filter          strip and filter to non-empty
+      -x, --filter          strip and filter to non-empty
+      --force-string-keys   JSON set keys should be forced to a string type
+      -f, --format FORMAT   Output handler (csv,json/ndjson,text)
+                            default=whatever your first input was
       -o {+,-,x,d,union,difference,intersection,unique}, --operation {+,-,x,d,union,difference,intersection,unique}
                             Operation to perform on the sets [-] Subtract sets
                             1...N from set 0 [+] Get the union of sets 0...N [x]
                             Get the intersection of sets 0...N [d] Symmetric
                             difference (disjunctive union). Elements from all sets
                             which are not in any others.
+
+
+## Input Formats
+
+kvenn supports three input formats. The format is detected from the file extension.
+
+### Plain text
+
+Each line is treated as a set member. No special syntax needed.
+
+    kvenn file1.txt file2.txt
+
+### CSV
+
+Use `::` to specify which column(s) to use as the set key:
+
+    kvenn data1.csv::color data2.csv::color
+
+Multiple key columns are supported:
+
+    kvenn data1.csv::id,color data2.csv::id,color
+
+### NDJSON (newline-delimited JSON)
+
+Works the same as CSV — use `::` to specify the key field(s):
+
+    kvenn data1.json::id data2.json::id
+
+Nested keys use dot notation:
+
+    kvenn data1.json::meta.id data2.json::meta.id
+
+Files with `.json` or `.ndjson` extensions are both supported.
+
+### Output format
+
+By default the output format matches the first input file. Override with `-f`:
+
+    kvenn data1.csv::color data2.csv::color -f json
 
 
 ## Examples
@@ -49,13 +91,12 @@ Values found in only one file
     kvenn <input1> <input2> <inputN> --operation unique
 
 
-Values found in only one file
-
-    kvenn <input1> <input2> <inputN> --operation unique
-
-
 Subtract values in B (and C, D.. etc) from A. (Unique values from A)
 
-    kvenn <inputA> <inputB> [<inputC>] --operation subtract
+    kvenn <inputA> <inputB> [<inputC>] --operation difference
 
 
+## Development
+
+    make install-dev
+    make test

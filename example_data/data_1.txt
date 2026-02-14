@@ -1,0 +1,10 @@
+Purple
+Orange
+Teal
+Mauve
+Azure
+Amber
+Red
+Olive
+Coral
+Lavender

@@ -5,8 +5,10 @@ with open("README.md", "r") as f:
 
 setup(
     name = 'kvenn',
-    scripts=['bin/kvenn'],
-    version = '1.0.4',
+    entry_points={
+      'console_scripts': ['kvenn=kvenn.core:cli'],
+    },
+    version = '2.0.0',
     description = 'CLI tool for doing set operations (e.g. intersection, difference, union) on lines of input',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -16,4 +18,7 @@ setup(
     download_url = 'https://github.com/jdotpy/kvenn/tarball/master',
     keywords = ['tools'],
     classifiers = [],
+    extras_require={
+        'dev': ['pytest'],
+    },
 )
