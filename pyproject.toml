@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kvenn"
+version = "2.1.0"
+description = "CLI tool for doing set operations (e.g. intersection, difference, union) on lines of input"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "KJ", email = "jdotpy@users.noreply.github.com" }
+]
+keywords = ["tools"]
+classifiers = []
+
+[project.urls]
+Homepage = "https://github.com/jdotpy/kvenn"
+Download = "https://github.com/jdotpy/kvenn/tarball/master"
+
+[project.scripts]
+kvenn = "kvenn.core:cli"
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
