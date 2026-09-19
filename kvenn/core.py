@@ -227,7 +227,7 @@ def format_stats(stats):
 
 
 def cli():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('sets', nargs="+", help='Each file is a set and each line in the file is a member of the set')
     parser.add_argument('-n', '--non-empty', action='store_true', default=False, help='non-empty values only')
     parser.add_argument('-s', '--strip', action='store_true', default=False, help='strip surrounding whitespace')
@@ -239,10 +239,12 @@ def cli():
         default='+',
         help="""
             Operation to perform on the sets
-            [-] Subtract sets 1...N from set 0
-            [+] Get the union of sets 0...N
-            [x] Get the intersection of sets 0...N
-            [d] Symmetric difference (disjunctive union). Elements from all sets which are not in any others.
+            [-] [difference]    Subtract sets 1...N from set 0
+            [+] [union]         Get the union of sets 0...N
+            [x] [intersection]  Get the intersection of sets 0...N
+            [d] [unique]        Symmetric difference (disjunctive union). Elements present in exactly one set
+
+            [stats]             Display set size summary statistics
         """
     )
     args = parser.parse_args()
